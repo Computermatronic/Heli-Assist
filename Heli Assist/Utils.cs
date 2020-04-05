@@ -32,5 +32,10 @@ namespace IngameScript
         {
             return float.IsNaN(value) ? 0 : value;
         }
+
+        public static float MinAbs(float value1, float value2)
+        {
+            return Math.Min(Math.Abs(value1), Math.Abs(value2)) * (value1 < 0 ? -1 : 1);
+        }
     }
 }

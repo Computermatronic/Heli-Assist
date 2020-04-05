@@ -9,9 +9,12 @@ using System.Text;
 using System;
 using VRage.Collections;
 using VRage.Game.Components;
+using VRage.Game.GUI.TextPanel;
+using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Game;
+using VRage;
 using VRageMath;
 
 namespace IngameScript
@@ -21,108 +24,87 @@ namespace IngameScript
         //The GyroController module is based on Flight Assist's GyroController and HoverModule, sharing code in places.
         public class GyroController
         {
-            const double minGyroRpmScale = 0.001 / 9.87;
-            const double gyroVelocityScale = 0.2 / 9.87;
+            const float gyroVelocity = 2.0f;
+            const float dampeningFactor = 0.5f / 9.87f;
 
+            private IMyShipController controller;
+            private List<IMyGyro> gyroscopes;
 
-            private readonly List<IMyGyro> gyros;
-            private readonly IMyShipController controller;
-
-
-            public GyroController(IMyShipController controller, List<IMyGyro> gyros)
+            public GyroController(IMyShipController controller, List<IMyGyro> gyroscopes)
             {
-                this.gyros = gyros;
                 this.controller = controller;
+                this.gyroscopes = new List<IMyGyro>(gyroscopes);
+            }
 
-                foreach (var gyro in gyros)
+            public void Update(IMyShipController controller, List<IMyGyro> gyroscopes)
+            {
+                SetController(controller);
+                AddGyroscopes(gyroscopes);
+            }
+
+            public void AddGyroscopes(List<IMyGyro> gyroscopes)
+            {
+                this.gyroscopes.AddList(gyroscopes);
+                this.gyroscopes = this.gyroscopes.Distinct().ToList();
+            }
+
+            public void SetController(IMyShipController controller)
+            {
+                this.controller = controller;
+            }
+
+            public void SetEnabled(bool setEnabled)
+            {
+                foreach (var gyroscope in gyroscopes)
                 {
-                    gyro.Pitch = 0f;
-                    gyro.Roll = 0f;
-                    gyro.Yaw = 0f;
-                    gyro.GyroPower = 1f;
+                    gyroscope.Enabled = setEnabled;
                 }
             }
 
-            public void SetEnabled(bool enabled)
+            public void SetOverride(bool setOverride)
             {
-                foreach (var gyro in gyros)
+                foreach (var gyroscope in gyroscopes)
                 {
-                    gyro.Enabled = enabled;
+                    gyroscope.GyroOverride = setOverride;
                 }
             }
 
-            public void SetGyroOverride(bool gyroOverride)
+            public Vector2 CalculatePitchRollToAchiveVelocity(Vector3 targetVelocity)
             {
-                foreach (var gyro in gyros)
-                {
-                    gyro.GyroOverride = gyroOverride;
-                }
+                Vector3 diffrence = Vector3.Normalize(controller.GetShipVelocities().LinearVelocity - targetVelocity);
+                Vector3 gravity = -Vector3.Normalize(controller.GetNaturalGravity());
+                float velocity = (float)controller.GetShipSpeed();
+
+                float pitch = NotNaN(Vector3.Dot(diffrence, Vector3.Cross(gravity, controller.WorldMatrix.Right)) * velocity) * gyroVelocity * dampeningFactor;
+                float roll = NotNaN(Vector3.Dot(diffrence, Vector3.Cross(gravity, controller.WorldMatrix.Forward)) * velocity) * gyroVelocity * dampeningFactor;
+
+                pitch = MinAbs(pitch, 180.0f * degToRad);
+                roll = MinAbs(roll, 180.0f * degToRad);
+
+                return new Vector2(roll, pitch);
             }
 
-            public Vector2 CalculatePitchRollToStop(float maxPitch, float maxRoll)
+            public Vector3 CalculateVelocityToAlign(float offsetPitch = 0.0f, float offsetRoll = 0.0f)
             {
-                Vector2 localVelocity;
+                Matrix shipOrientation = controller.WorldMatrix.GetOrientation();
+                Matrix controllerOrientation; controller.Orientation.GetMatrix(out controllerOrientation);
 
-                Vector3 worldVelocity = Vector3.Normalize(controller.GetShipVelocities().LinearVelocity);
-                Vector3 gravity = -Vector3D.Normalize(controller.GetNaturalGravity());
+                Vector3 target = Vector3.Transform(controllerOrientation.Down, Quaternion.CreateFromAxisAngle(controllerOrientation.Left,
+                    offsetPitch) * Quaternion.CreateFromAxisAngle(controllerOrientation.Backward, offsetRoll));
+                Vector3 gravity = Vector3.Transform(-Vector3.Normalize(controller.GetNaturalGravity()), Matrix.Transpose(controller.CubeGrid.WorldMatrix.GetOrientation()));
 
-                localVelocity.Y = Vector3.Dot(worldVelocity, Vector3.Cross(gravity, controller.WorldMatrix.Right)) * (float)controller.GetShipSpeed();
-                localVelocity.X = Vector3.Dot(worldVelocity, Vector3.Cross(gravity, controller.WorldMatrix.Forward)) * (float)controller.GetShipSpeed();
-
-                localVelocity.X = double.IsNaN(localVelocity.X) ? 0 : localVelocity.X;
-                localVelocity.Y = double.IsNaN(localVelocity.Y) ? 0 : localVelocity.Y;
-
-                localVelocity *= (float)gyroVelocityScale * 4;
-
-                localVelocity.X = Math.Abs(localVelocity.X) < maxRoll ? localVelocity.X : localVelocity.X > 0 ? maxRoll : -maxRoll;
-                localVelocity.Y = Math.Abs(localVelocity.Y) < maxPitch ? localVelocity.Y : localVelocity.Y > 0 ? maxPitch : -maxPitch;
-
-                return localVelocity;
+                return Vector3.Cross(target, gravity);
             }
 
-            public void SetPitchRoll(float pitch, float roll, Vector3 velocity)
+            public void SetAngularVelocity(Vector3 velocity)
             {
-                Matrix matrix; controller.Orientation.GetMatrix(out matrix);
-                Vector3 reference = Vector3D.Transform(matrix.Down, Quaternion.CreateFromAxisAngle(matrix.Left, pitch) * Quaternion.CreateFromAxisAngle(matrix.Backward, roll));
-                Vector3 target = controller.GetNaturalGravity();
-
-                foreach (var gyro in gyros)
+                foreach (var gyroscope in gyroscopes)
                 {
-                    gyro.Orientation.GetMatrix(out matrix);
-                    matrix = Matrix.Transpose(matrix);
-
-                    var localReference = Vector3D.Transform(reference, (MatrixD)matrix);
-                    var localVelocity = Vector3D.Transform(velocity, (MatrixD)matrix);
-                    var localTarget = Vector3D.Transform(target, MatrixD.Transpose(gyro.WorldMatrix.GetOrientation()));
-
-                    var axis = Vector3D.Cross(localReference, localTarget);
-                    var angle = axis.Length();
-
-                    angle = Math.Atan2(angle, Math.Sqrt(Math.Max(0.0, 1.0 - angle * angle)));
-                    if (Vector3D.Dot(localReference, localTarget) < 0) angle = Math.PI;
-
-                    axis.Normalize();
-                    axis *= Math.Max(minGyroRpmScale, gyro.GetMaximum<float>("Roll") * (angle / Math.PI) * gyroVelocityScale);
-
-                    gyro.Pitch = (float)(-axis.X + localVelocity.X);
-                    gyro.Roll = (float)(-axis.Z + localVelocity.Z);
-                    gyro.Yaw = (float)(-axis.Y + localVelocity.Y);
-                }
-            }
-
-            public void SetVelocity(Vector3D velocity)
-            {
-                Matrix matrix;
-
-                foreach (var gyro in gyros)
-                {
-                    gyro.Orientation.GetMatrix(out matrix);
-                    matrix = Matrix.Transpose(matrix);
-                    var localVelocity = Vector3D.Transform(velocity, (MatrixD)matrix);
-
-                    gyro.Pitch = (float)localVelocity.X;
-                    gyro.Roll = (float)localVelocity.Z;
-                    gyro.Yaw = (float)localVelocity.Y;
+                    Matrix localOrientation; gyroscope.Orientation.GetMatrix(out localOrientation);
+                    Vector3 localVelocity = Vector3.Transform(velocity, Matrix.Transpose(localOrientation));
+                    gyroscope.Pitch = (float)localVelocity.X;
+                    gyroscope.Roll = (float)localVelocity.Z;
+                    gyroscope.Yaw = (float)localVelocity.Y;
                 }
             }
         }

@@ -1,22 +1,22 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.645
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Heli Assist", "Heli Assist\Heli Assist.csproj", "{9D762841-9EF4-40B6-A210-359C8E25A1C1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Heli Assist", "Heli Assist\Heli Assist.csproj", "{96AB9457-1DE5-4FED-9F82-F5DDDC4D92DE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{9D762841-9EF4-40B6-A210-359C8E25A1C1}.Debug|x64.ActiveCfg = Debug|x64
-		{9D762841-9EF4-40B6-A210-359C8E25A1C1}.Debug|x64.Build.0 = Debug|x64
+		{96AB9457-1DE5-4FED-9F82-F5DDDC4D92DE}.Debug|x64.ActiveCfg = Debug|x64
+		{96AB9457-1DE5-4FED-9F82-F5DDDC4D92DE}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {06F15C9B-1CF6-4D78-B09A-AD179AE3227F}
+		SolutionGuid = {7B0D45BC-574D-44DF-A4CC-EF7E6F0E7DD4}
 	EndGlobalSection
 EndGlobal

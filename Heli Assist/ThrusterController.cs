@@ -7,13 +7,14 @@ using System.Collections;
 using System.Linq;
 using System.Text;
 using System;
-using VRage;
 using VRage.Collections;
 using VRage.Game.Components;
-using VRage.Game.ModAPI.Ingame;
+using VRage.Game.GUI.TextPanel;
 using VRage.Game.ModAPI.Ingame.Utilities;
+using VRage.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Game;
+using VRage;
 using VRageMath;
 
 namespace IngameScript
@@ -26,18 +27,22 @@ namespace IngameScript
             private List<IMyThrust> allThrusters;
             private List<IMyThrust> upThrusters, downThrusters, leftThrusters, rightThrusters, forwardThrusters, backwardThrusters;
 
-
             public ThrusterController(IMyShipController controller, List<IMyThrust> thrusters)
             {
-                this.controller = controller;
-                this.allThrusters = thrusters;
-
                 upThrusters = new List<IMyThrust>();
                 downThrusters = new List<IMyThrust>();
                 leftThrusters = new List<IMyThrust>();
                 rightThrusters = new List<IMyThrust>();
                 forwardThrusters = new List<IMyThrust>();
                 backwardThrusters = new List<IMyThrust>();
+
+                Update(controller, thrusters);
+            }
+
+            public void Update(IMyShipController controller, List<IMyThrust> thrusters)
+            {
+                this.controller = controller;
+                this.allThrusters = thrusters.Distinct().ToList();
 
                 foreach (var thruster in thrusters)
                 {
@@ -50,6 +55,13 @@ namespace IngameScript
 
                     thruster.ThrustOverride = 0;
                 }
+
+                forwardThrusters = forwardThrusters.Distinct().ToList();
+                backwardThrusters = backwardThrusters.Distinct().ToList();
+                upThrusters = upThrusters.Distinct().ToList();
+                downThrusters = downThrusters.Distinct().ToList();
+                leftThrusters = leftThrusters.Distinct().ToList();
+                rightThrusters = rightThrusters.Distinct().ToList();
             }
 
             public void SetEnabled(bool enabled)
