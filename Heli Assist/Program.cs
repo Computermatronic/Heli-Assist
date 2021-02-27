@@ -51,6 +51,9 @@ namespace IngameScript
         float precisionAimFactor = 16.0f;
         float mouseSpeed = 0.5f;
 
+        bool invertPitch = false;
+        bool invertRoll = false;
+
         //Cache Variables
         List<IMyShipController> controllerCache;
         List<IMyGyro> gyroCache;
@@ -96,6 +99,8 @@ namespace IngameScript
             Echo("Current Mode: " + mode);
             Echo("Precision Aim: " + (enablePrecisionAim ? "enabled" : "disabled"));
             Echo("Lateral Dampening: " + (enableLateralDampening ? "enabled" : "disabled"));
+            Echo("Invert Pitch: " + (invertPitch ? "enabled" : "disabled"));
+            Echo("Invert Roll: " + (invertRoll ? "enabled" : "disabled"));
 
             if (IsValidMode(argument))
                 SwitchToMode(argument);
@@ -115,9 +120,14 @@ namespace IngameScript
             var mouse = new Vector3(controller.RotationIndicator, controller.RollIndicator * 9);
             var dampeningRotation = gyroController.CalculatePitchRollToAchiveVelocity(Vector3.Zero);
             var autoStop = controller.DampenersOverride;
+            int pitchFactor = invertPitch ? -1 : 1;
+            int rollFactor = invertRoll ? -1 : 1;
 
             if (enablePrecisionAim) mouse *= 1 / precisionAimFactor;
             else mouse *= mouseSpeed;
+
+            mouse.X *= pitchFactor;
+            mouse.Z *= rollFactor;
 
             switch (mode)
             {
@@ -222,6 +232,9 @@ namespace IngameScript
                 maxLandingRoll = (float)configIni.Get("main", "max_landing_roll").ToDouble(maxLandingRoll);
 
                 precisionAimFactor = (float)configIni.Get("main", "precision").ToDouble(precisionAimFactor);
+
+                invertPitch = (bool)configIni.Get("main", "invert_pitch").ToBoolean(invertPitch);
+                invertRoll = (bool)configIni.Get("main", "invert_roll").ToBoolean(invertRoll);
             }
 
             var blockGroup = GridTerminalSystem.GetBlockGroupWithName(blockGroupName);
