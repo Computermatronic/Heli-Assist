@@ -24,7 +24,7 @@ namespace IngameScript
         //The GyroController module is based on Flight Assist's GyroController and HoverModule, sharing code in places.
         public class GyroController
         {
-            const float dampeningFactor = 1.0f / 9.87f;
+            const float dampeningFactor = 25.0f;
 
             private IMyShipController controller;
             private List<IMyGyro> gyroscopes;
@@ -73,9 +73,10 @@ namespace IngameScript
                 Vector3 diffrence = Vector3.Normalize(controller.GetShipVelocities().LinearVelocity - targetVelocity);
                 Vector3 gravity = -Vector3.Normalize(controller.GetNaturalGravity());
                 float velocity = (float)controller.GetShipSpeed();
+                float proportionalModifier = (float)Math.Pow(Math.Abs(diffrence.Length()), 2);
 
-                float pitch = NotNaN(Vector3.Dot(diffrence, Vector3.Cross(gravity, controller.WorldMatrix.Right)) * velocity) * diffrence.Length() * dampeningFactor;
-                float roll = NotNaN(Vector3.Dot(diffrence, Vector3.Cross(gravity, controller.WorldMatrix.Forward)) * velocity) * diffrence.Length() * dampeningFactor;
+                float pitch = NotNaN(Vector3.Dot(diffrence, Vector3.Cross(gravity, controller.WorldMatrix.Right)) * velocity) * proportionalModifier / dampeningFactor;
+                float roll = NotNaN(Vector3.Dot(diffrence, Vector3.Cross(gravity, controller.WorldMatrix.Forward)) * velocity) * proportionalModifier / dampeningFactor;
 
                 pitch = MinAbs(pitch, 90.0f * degToRad);
                 roll = MinAbs(roll, 90.0f * degToRad);
@@ -100,7 +101,7 @@ namespace IngameScript
                 {
                     var gyroLocalVelocity = Vector3.TransformNormal(cockpitLocalVelocity, Matrix.Transpose(gyro.WorldMatrix));
 
-                    gyro.Pitch = gyroLocalVelocity.X; ;
+                    gyro.Pitch = gyroLocalVelocity.X;
                     gyro.Yaw = gyroLocalVelocity.Y;
                     gyro.Roll = gyroLocalVelocity.Z;
                 }

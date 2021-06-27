@@ -31,83 +31,99 @@ Licence:
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
-  
+
 Installation:
-   Create block group containing:
-       A ship controller (cockpit, flight seat, remote controll).
-       Gyroscopes.
-       Thrusters (Make sure you have downward thrusters).
-   Load Script into Programmable block.
-   (Optional) Edit Custom Data config.
+   1. Create a group labeled 'heli assist' (or whatever you have configured the 
+      Heli-Assist group to be called) containing the gyroscopes, thrusters and 
+      cockpits you wish to use with Heli-Assist.
+   2. Load the Heli-Assist script into a programmable block.
+   3. (optionally) configure the Heli-Assist config as described in the configuration 
+      section.
 
 Usage:
-   Once installed Heli Assist will align the craft with natural gravity. Using 
-   the WASD keys will result in the craft pitching and rolling in the appropriate 
-   direction as to result in forward or sideward motion, and will regulate thrust 
+   Once installed, Heli-Assist will align the craft with natural gravity. Using the 
+   WASD keys will result in the craft pitching and rolling in the appropriate direction 
+   as to result in forwarding or lateral motion. Additionally, it will regulate thrust 
    accordingly to maintain altitude.
-   
-   Using the mouse, or up down left and right keys will orientate the craft 
-   accordingly in addition to any pitch or roll already applied to move.
-   
-   Activation of the motion dampeners will result in the craft pitching and rolling 
-   in the appropriate direction as to slow the craft.
-   
-   Heli Assist provides 4 modes:
-       flight   - In flight mode, the craft will behave as described above.
-                  Flight mode can be activated by running the script with 'flight' 
-                  (without quotes) as the argument, and can be set as the default 
-                  mode by setting 'start_mode' in Custom Data to 'flight'.
-   
-       landing  - In landing mode, the craft will behave as described above, 
-                  with the exception that the craft will move slower to allow for more
-                  precise movement and all movement will be dampened by default.
-                  Landing mode can be activated by running the script with 'landing'
-                 as the argument, can be toggled off and on by running the script 
-                  with 'toggle_landing' as the argument and can be set as the default 
-                  mode by setting 'start_mode' in Custom Data to 'landing'. Toggling 
-                  back from landing mode will put the craft into flight mode.
-                 
-       manual   - In manual mode, the craft will not pitch and roll accordingly to
-                  achive motion when the WASD keys are pressed, but still will regulate 
-                  engine power to maintain altitude.
-                  Manual mode can be activated by running the script with 'manual'
-                  as the argument, can be toggled off and on by running the script 
-                  with 'toggle_manual' as the argument and can be set as the default 
-                  mode by setting 'start_mode' in Custom Data to 'manual'. Toggling 
-                  back from landing mode will put the craft into flight mode.
-                 
-       shutdown - In shutdown mode, all thrusters and gyroscopes associated with
-                  Heli Assist will power off.
-                  Shutdown mode can be activated by running the script with 'shutdown'
-                  as the argument, can be toggled off and on by running the script 
-                  with 'toggle_shutdown' as the argument and can be set as the default 
-                  mode by setting 'start_mode' in Custom Data to 'shutdown'. Toggling 
-                  back from landing mode will put the craft into flight mode.
-                  
-   Heli Assist can be configured by editing the Custom Data of the programable block. The
-   config options are as follows:
-       block_group_name   - This allows for the setting of a custom group name for blocks 
-                            associated with Heli Assist. By default it is 'Heli Assist'
-                            (without quotes).
-                          
-       max_pitch          - This sets the maximum allowed pitch in degrees for both using the 
-                            WASD keys, and the motion dampeners. By default it is 45.
-                          
-       max_roll           - This sets the maximum allowed roll in degrees for both using the 
-                            WASD keys, and the motion dampeners. By default it is 45.
-                          
-       max_landing_pitch - This sets the maximum allowed pitch in degrees for both using the 
-                           WASD keys, and the motion dampeners while in landing mode. By 
-                           default it is 10.
-                          
-       max_landing_roll  - This sets the maximum allowed roll in degrees for both using the 
-                           WASD keys, and the motion dampeners while in landing mode. By 
-                           default it is 10.
-                            
-       start_mode        - This sets the mode that Heli Assist will be in when it is first
-                           started, as described in Heli Assist mode description above. By 
-                           default is 'flight'.
-                           
-       remember_mode     - This setting determines whether Heli Assist should attempt to remember
-                           the mode it was last in when the script is restarted. By default it
-                           is 'true'.
+
+   Using the mouse or up down left and right keys will orientate the craft accordingly 
+   in addition to any pitch or roll already applied to move. Activation of the inertial 
+   dampeners will result in the craft pitching and rolling in the appropriate direction 
+   to slow the craft.
+
+   Flight Modes:
+      For ease of use, Heli-Assist provides different flight modes for multiple situations.
+         * Flight mode will make the craft behave as described above and is activated by 
+           running the program with the argument 'flight'. The 'toggle_flight' argument 
+           will toggle between flight mode and manual mode.
+         * Landing mode behaves almost identically to flight mode, except that the maximum 
+           pitch and roll (and thereby rate of acceleration) will be reduced to allow for more 
+           precise movement. Additionally, the inertial dampeners will automatically activate. 
+           Landing mode is activated by running the program with the argument 'landing'. The 
+           'toggle_landing' argument will toggle between landing mode and flight mode.
+         * Manual mode will disable the WASD keys and inertial dampening affecting pitch and roll 
+           but will still regulate thrust in order to maintain altitude. Manual mode is useful for 
+           aiming at targets or ignoring the limits of Heli-Assist's other flight modes, without the 
+           Heli-Assist automatically correcting. Manual mode is activated by running the program with 
+           the argument 'manual'. The 'toggle_manual' argument will toggle between manual mode and 
+           flight mode.
+         * Standby mode will cause Heli-Assist to relinquish control of all gyroscopes and thrusters, 
+           allowing the pilot or another script to control them. It is helpful for switching between 
+           different craft configurations (such as shifting from hovering configuration to a high-speed 
+           configuration like a modern VTOL aircraft such as a harrier) or allowing for another script 
+           such as Vector Thrust to take control. Standby mode is activated by running the program with 
+           the argument 'standby'. The 'toggle_standby' argument will toggle between standby mode and 
+           flight mode.
+         * Shutdown mode will power off all thrusters and gyroscopes associated with Heli-Assist. 
+           Shutdown mode is activated by running the program with the argument 'shutdown'. The 
+           'toggle_shutdown' argument will toggle between shutdown mode and flight mode.
+
+   Parameters:
+      Heli-Assist provides multiple flight parameters in addition to its modes for customizability.
+         * The Precision Aim parameter can be used in flight, landing and manual mode, reducing the 
+           sensitivity of the mouse/joystick to make aiming easier. It is toggled on/off by running 
+           the program with the 'toggle_precision' argument.
+         * The Lateral Override parameter can be used in flight and landing mode and overrides inertial 
+           dampening on the lateral axis, meaning that disabling the inertial dampeners will only 
+           disable forward and backwards dampening, to make cruising easier. It is toggled on/off 
+           by running the program with the 'toggle_lateral_override' argument ('toggle_lateral_dampening' 
+           does the same and is retained for compatibility reasons).
+
+   Configuration:
+      Heli Assist is configured by editing the Custom Data of the programmable block and is automatically 
+      generated on first use.
+         * block_group_name - This allows for the setting of a custom group name for blocks associated 
+         with Heli Assist. By default, it is 'Heli Assist' (without quotes).
+         * max_pitch - This sets the maximum allowed pitch in degrees for both the WASD keys and the 
+           motion dampeners. By default, it is 45.
+         * max_roll - This sets the maximum allowed roll in degrees for both the WASD keys and the motion 
+           dampeners. By default, it is 45.
+         * max_landing_pitch - This sets the maximum allowed pitch in degrees for both the WASD keys and 
+           the motion dampeners while in landing mode. By default, it is 10.
+         * max_landing_roll - This sets the maximum allowed roll in degrees for both the WASD keys and 
+           the motion dampeners while in landing mode. By default, it is 10.
+         * precision - This sets the reduction in movement from gyroscopes when in precision aim mode. 
+           By default, it is 16.
+         * start_mode - This sets the mode that Heli Assist will be in when it is first started, as 
+           described above. By default is 'flight'.
+         * remember_mode - This setting determines whether Heli Assist should attempt to remember the 
+           mode it was last in when the script is restarted. By default, it is 'true'.
+
+Change Log:
+   v1.13:
+      * Fixed a bug that prevented lateral dampening override from working.
+      * Added proportional dampening to inertial dampening.
+      * Changed lateral dampening to lateral override for less ambiguity
+      * Updated readme.
+   v1.12:
+      * Fixed a bug where control seats facing specific directions would make craft uncontrollable.
+   v1.11:
+      * Added automatic detection of new gyroscopes, thrusters and cockpits, updating every 10 seconds.
+      * Fixed a bug where specific gyroscope configurations would make craft uncontrollable.
+   v1.10:
+      * Added precision aim.
+      * Added lateral only dampening.
+      * Added standby mode.
+      * Changed landing mode so it will no longer force the use of dampeners.
+   v1.01:
+      * Fixed a bug where gyroscopes would fail to respond when placed in specific directions.
