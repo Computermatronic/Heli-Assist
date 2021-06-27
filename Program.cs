@@ -33,7 +33,7 @@ namespace IngameScript
         //State Variables;
         string mode;
 
-        bool enableLateralDampening;
+        bool enableLateralOverride;
         bool enablePrecisionAim;
 
         //Config Variables
@@ -95,7 +95,7 @@ namespace IngameScript
             Echo("Script running, next update: " + (10 - (uint)timeSinceLastUpdate.TotalSeconds).ToString());
             Echo("Current Mode: " + mode);
             Echo("Precision Aim: " + (enablePrecisionAim ? "enabled" : "disabled"));
-            Echo("Lateral Dampening: " + (enableLateralDampening ? "enabled" : "disabled"));
+            Echo("Lateral Override: " + (enableLateralOverride ? "enabled" : "disabled"));
 
             if (IsValidMode(argument))
                 SwitchToMode(argument);
@@ -104,7 +104,8 @@ namespace IngameScript
             else if (argument == "toggle_shutdown") SwitchToMode(mode == "shutdown" ? "flight" : "shutdown");
             else if (argument == "toggle_standby") SwitchToMode(mode == "standby" ? "flight" : "standby");
             else if (argument == "toggle_precision") enablePrecisionAim = !enablePrecisionAim;
-            else if (argument == "toggle_lateral_dampening") enableLateralDampening = !enableLateralDampening;
+            else if (argument == "toggle_lateral_dampening") enableLateralOverride = !enableLateralOverride;
+            else if (argument == "toggle_lateral_override") enableLateralOverride = !enableLateralOverride;
             else if (argument == "update")
             {
                 updateFinished = false;
@@ -127,7 +128,7 @@ namespace IngameScript
                         var roll = wasd.X * maxFlightRoll * degToRad;
                         dampeningRotation = Vector2.Min(dampeningRotation, new Vector2(maxFlightRoll, maxFlightPitch) * degToRad);
 
-                        if (autoStop && IsZero(roll)) roll = MinAbs(dampeningRotation.X, maxFlightRoll * degToRad);
+                        if ((autoStop || enableLateralOverride) && IsZero(roll)) roll = MinAbs(dampeningRotation.X, maxFlightRoll * degToRad);
                         if (autoStop && IsZero(pitch)) pitch = MinAbs(dampeningRotation.Y, maxFlightPitch * degToRad);
 
                         gyroController.SetAngularVelocity(gyroController.CalculateVelocityToAlign(pitch, roll) + mouse);
@@ -140,8 +141,8 @@ namespace IngameScript
                         var roll = wasd.X * maxFlightRoll * degToRad;
                         dampeningRotation = Vector2.Min(dampeningRotation, new Vector2(maxLandingRoll, maxLandingPitch) * degToRad);
 
-                        if (autoStop && IsZero(roll)) roll = Math.Min(Math.Max(dampeningRotation.X, -maxLandingRoll), maxLandingRoll);
-                        if (autoStop && IsZero(pitch)) pitch = Math.Min(Math.Max(dampeningRotation.Y, -maxLandingPitch), maxLandingPitch);
+                        if ((autoStop || enableLateralOverride) && IsZero(roll)) roll = MinAbs(dampeningRotation.X, maxLandingRoll);
+                        if (autoStop && IsZero(pitch)) pitch = MinAbs(dampeningRotation.Y, maxLandingPitch);
 
                         gyroController.SetAngularVelocity(gyroController.CalculateVelocityToAlign(pitch, roll) + mouse);
                         thrustController.SetYAxisThrust(wasd.Y != 0 ? 0 : thrustController.CalculateThrustToHover());
@@ -191,7 +192,7 @@ namespace IngameScript
             }
             this.mode = mode;
             enablePrecisionAim = false;
-            enableLateralDampening = false;
+            enableLateralOverride = false;
         }
 
         bool IsValidMode(string mode)
