@@ -24,8 +24,7 @@ namespace IngameScript
         //The GyroController module is based on Flight Assist's GyroController and HoverModule, sharing code in places.
         public class GyroController
         {
-            const float gyroVelocity = 2.0f;
-            const float dampeningFactor = 0.5f / 9.87f;
+            const float dampeningFactor = 1.0f / 9.87f;
 
             private IMyShipController controller;
             private List<IMyGyro> gyroscopes;
@@ -75,36 +74,35 @@ namespace IngameScript
                 Vector3 gravity = -Vector3.Normalize(controller.GetNaturalGravity());
                 float velocity = (float)controller.GetShipSpeed();
 
-                float pitch = NotNaN(Vector3.Dot(diffrence, Vector3.Cross(gravity, controller.WorldMatrix.Right)) * velocity) * gyroVelocity * dampeningFactor;
-                float roll = NotNaN(Vector3.Dot(diffrence, Vector3.Cross(gravity, controller.WorldMatrix.Forward)) * velocity) * gyroVelocity * dampeningFactor;
+                float pitch = NotNaN(Vector3.Dot(diffrence, Vector3.Cross(gravity, controller.WorldMatrix.Right)) * velocity) * diffrence.Length() * dampeningFactor;
+                float roll = NotNaN(Vector3.Dot(diffrence, Vector3.Cross(gravity, controller.WorldMatrix.Forward)) * velocity) * diffrence.Length() * dampeningFactor;
 
-                pitch = MinAbs(pitch, 180.0f * degToRad);
-                roll = MinAbs(roll, 180.0f * degToRad);
+                pitch = MinAbs(pitch, 90.0f * degToRad);
+                roll = MinAbs(roll, 90.0f * degToRad);
 
                 return new Vector2(roll, pitch);
             }
 
             public Vector3 CalculateVelocityToAlign(float offsetPitch = 0.0f, float offsetRoll = 0.0f)
             {
-                Matrix shipOrientation = controller.WorldMatrix.GetOrientation();
-                Matrix controllerOrientation; controller.Orientation.GetMatrix(out controllerOrientation);
+                var gravity = -Vector3D.Normalize(controller.GetNaturalGravity());
 
-                Vector3 target = Vector3.Transform(controllerOrientation.Down, Quaternion.CreateFromAxisAngle(controllerOrientation.Left,
-                    offsetPitch) * Quaternion.CreateFromAxisAngle(controllerOrientation.Backward, offsetRoll));
-                Vector3 gravity = Vector3.Transform(-Vector3.Normalize(controller.GetNaturalGravity()), Matrix.Transpose(controller.CubeGrid.WorldMatrix.GetOrientation()));
+                var pitch = Vector3.Dot(controller.WorldMatrix.Forward, gravity) - offsetPitch;
+                var roll = Vector3.Dot(controller.WorldMatrix.Right, gravity) + offsetRoll;
 
-                return Vector3.Cross(target, gravity);
+                return new Vector3(pitch, 0, roll);
             }
 
             public void SetAngularVelocity(Vector3 velocity)
             {
-                foreach (var gyroscope in gyroscopes)
+                var cockpitLocalVelocity = Vector3.TransformNormal(velocity, controller.WorldMatrix);
+                foreach (var gyro in gyroscopes)
                 {
-                    Matrix localOrientation; gyroscope.Orientation.GetMatrix(out localOrientation);
-                    Vector3 localVelocity = Vector3.Transform(velocity, Matrix.Transpose(localOrientation));
-                    gyroscope.Pitch = (float)localVelocity.X;
-                    gyroscope.Roll = (float)localVelocity.Z;
-                    gyroscope.Yaw = (float)localVelocity.Y;
+                    var gyroLocalVelocity = Vector3.TransformNormal(cockpitLocalVelocity, Matrix.Transpose(gyro.WorldMatrix));
+
+                    gyro.Pitch = gyroLocalVelocity.X; ;
+                    gyro.Yaw = gyroLocalVelocity.Y;
+                    gyro.Roll = gyroLocalVelocity.Z;
                 }
             }
         }

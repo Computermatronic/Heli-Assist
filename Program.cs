@@ -43,7 +43,7 @@ namespace IngameScript
         bool rememberLastMode = true;
 
         float maxFlightPitch = 30.0f;
-        float maxFlightRoll = 20.0f;
+        float maxFlightRoll = 30.0f;
 
         float maxLandingPitch = 10.0f;
         float maxLandingRoll = 10.0f;
