@@ -23,9 +23,9 @@ namespace IngameScript
         const float degToRad = (float)Math.PI / 180;
         const float radToDeg = 180.0f / (float)Math.PI;
 
-        public static bool IsZero(float value, float epsilon = 0.0001f)
+        public static bool IsEqual(float value1, float value2, float epsilon = 0.0001f)
         {
-            return Math.Abs(NotNaN(value)) <= epsilon;
+            return Math.Abs(NotNaN(value1 - value2)) <= epsilon;
         }
 
         public static float NotNaN(float value)
@@ -36,6 +36,55 @@ namespace IngameScript
         public static float MinAbs(float value1, float value2)
         {
             return Math.Min(Math.Abs(value1), Math.Abs(value2)) * (value1 < 0 ? -1 : 1);
+        }
+        class ConfigSection
+        {
+            Dictionary<string, string> config;
+            string name;
+
+            public ConfigSection(string name)
+            {
+                this.config = new Dictionary<string, string>();
+                this.name = name;
+            }
+
+            public void Read(string text)
+            {
+                config.Clear();
+
+                var ini = new MyIni();
+                MyIniParseResult parseResult;
+                if (!ini.TryParse(text, out parseResult))
+                    throw new Exception("Failed To Read Config: " + parseResult.Error + " on line" + parseResult.LineNo.ToString());
+
+                var keys = new List<MyIniKey>();
+                ini.GetKeys(name, keys);
+                foreach (var key in keys)
+                {
+                    config.Add(key.Name, ini.Get(key).ToString());
+                }
+            }
+
+            public string write()
+            {
+                MyIni ini = new MyIni();
+                ini.AddSection(name);
+
+                foreach (var kv in config) { ini.Set(name, kv.Key, kv.Value); }
+
+                return ini.ToString();
+            }
+
+            public T Get<T>(string key, T value)
+            {
+                if (!config.ContainsKey(key))
+                {
+                    config.Add(key, value.ToString());
+                    return value;
+                }
+                string result; config.TryGetValue(key, out result);
+                return (T)Convert.ChangeType(result, typeof(T));
+            }
         }
     }
 }

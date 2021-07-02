@@ -52,7 +52,8 @@
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
-    <AdditionalFiles Include="Instructions1.readme" />
+    <AdditionalFiles Include="Instructions.readme" />
+    <None Include="readme" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">

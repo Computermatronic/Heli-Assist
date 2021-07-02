@@ -93,7 +93,11 @@ Usage:
       Heli Assist is configured by editing the Custom Data of the programmable block and is automatically 
       generated on first use.
          * block_group_name - This allows for the setting of a custom group name for blocks associated 
-         with Heli Assist. By default, it is 'Heli Assist' (without quotes).
+           with Heli Assist. By default, it is 'Heli Assist' (without quotes).
+         * start_mode - This sets the mode that Heli Assist will be in when it is first started, as 
+           described above. By default is 'flight'.
+         * remember_mode - This setting determines whether Heli Assist should attempt to remember the 
+           mode it was last in when the script is restarted. By default, it is 'true'.
          * max_pitch - This sets the maximum allowed pitch in degrees for both the WASD keys and the 
            motion dampeners. By default, it is 45.
          * max_roll - This sets the maximum allowed roll in degrees for both the WASD keys and the motion 
@@ -104,12 +108,13 @@ Usage:
            the motion dampeners while in landing mode. By default, it is 10.
          * precision - This sets the reduction in movement from gyroscopes when in precision aim mode. 
            By default, it is 16.
-         * start_mode - This sets the mode that Heli Assist will be in when it is first started, as 
-           described above. By default is 'flight'.
-         * remember_mode - This setting determines whether Heli Assist should attempt to remember the 
-           mode it was last in when the script is restarted. By default, it is 'true'.
+         * mouse_speed - This sets the mouse sensitivity in all modes. By default, it is 10.
 
 Change Log:
+   v1.14:
+      * Fixed a bug where high pitch and roll config settings would cause craft to pitch and roll indefinitely.
+      * Fixed a bug where script config is not auto-generated when left blank.
+      * Added mouse sensitivity setting to config.
    v1.13:
       * Fixed a bug that prevented lateral dampening override from working.
       * Added proportional dampening to inertial dampening.

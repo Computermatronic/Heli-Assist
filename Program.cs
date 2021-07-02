@@ -37,19 +37,19 @@ namespace IngameScript
         bool enablePrecisionAim;
 
         //Config Variables
-        string blockGroupName = "Heli Assist";
+        string blockGroupName;
 
-        string start_mode = "flight";
-        bool rememberLastMode = true;
+        string start_mode;
+        bool rememberLastMode;
 
-        float maxFlightPitch = 30.0f;
-        float maxFlightRoll = 30.0f;
+        float maxFlightPitch;
+        float maxFlightRoll;
 
-        float maxLandingPitch = 10.0f;
-        float maxLandingRoll = 10.0f;
+        float maxLandingPitch;
+        float maxLandingRoll;
 
-        float precisionAimFactor = 16.0f;
-        float mouseSpeed = 0.5f;
+        float precisionAimFactor;
+        float mouseSpeed;
 
         //Cache Variables
         List<IMyShipController> controllerCache;
@@ -128,8 +128,8 @@ namespace IngameScript
                         var roll = wasd.X * maxFlightRoll * degToRad;
                         dampeningRotation = Vector2.Min(dampeningRotation, new Vector2(maxFlightRoll, maxFlightPitch) * degToRad);
 
-                        if ((autoStop || enableLateralOverride) && IsZero(roll)) roll = MinAbs(dampeningRotation.X, maxFlightRoll * degToRad);
-                        if (autoStop && IsZero(pitch)) pitch = MinAbs(dampeningRotation.Y, maxFlightPitch * degToRad);
+                        if ((autoStop || enableLateralOverride) && IsEqual(0, roll)) roll = MinAbs(dampeningRotation.X, maxFlightRoll * degToRad);
+                        if (autoStop && IsEqual(0, pitch)) pitch = MinAbs(dampeningRotation.Y, maxFlightPitch * degToRad);
 
                         gyroController.SetAngularVelocity(gyroController.CalculateVelocityToAlign(pitch, roll) + mouse);
                         thrustController.SetYAxisThrust(wasd.Y != 0 ? 0 : thrustController.CalculateThrustToHover());
@@ -137,12 +137,12 @@ namespace IngameScript
                     }
                 case "landing":
                     {
-                        var pitch = wasd.Z * maxFlightPitch * degToRad;
-                        var roll = wasd.X * maxFlightRoll * degToRad;
+                        var pitch = wasd.Z * maxLandingPitch * degToRad;
+                        var roll = wasd.X * maxLandingRoll * degToRad;
                         dampeningRotation = Vector2.Min(dampeningRotation, new Vector2(maxLandingRoll, maxLandingPitch) * degToRad);
 
-                        if ((autoStop || enableLateralOverride) && IsZero(roll)) roll = MinAbs(dampeningRotation.X, maxLandingRoll);
-                        if (autoStop && IsZero(pitch)) pitch = MinAbs(dampeningRotation.Y, maxLandingPitch);
+                        if ((autoStop || enableLateralOverride) && IsEqual(0, roll)) roll = MinAbs(dampeningRotation.X, maxLandingRoll);
+                        if (autoStop && IsEqual(0, pitch)) pitch = MinAbs(dampeningRotation.Y, maxLandingPitch);
 
                         gyroController.SetAngularVelocity(gyroController.CalculateVelocityToAlign(pitch, roll) + mouse);
                         thrustController.SetYAxisThrust(wasd.Y != 0 ? 0 : thrustController.CalculateThrustToHover());
@@ -202,27 +202,27 @@ namespace IngameScript
 
         public void Update()
         {
-            if (isFirstUpdate || configCache != Me.CustomData)
+            if (isFirstUpdate || configCache != Me.CustomData || Me.CustomData == "")
             {
-                configCache = Me.CustomData;
-                MyIni configIni = new MyIni();
-                MyIniParseResult parseResult;
+                var config = new ConfigSection("main");
+                config.Read(Me.CustomData);
 
-                if (!configIni.TryParse(configCache, out parseResult))
-                    throw new Exception("Failed To Read Config: " + parseResult.Error + " on line" + parseResult.LineNo.ToString());
+                blockGroupName = config.Get<string>("block_group_name", "Heli Assist");
 
-                blockGroupName = configIni.Get("main", "block_group_name").ToString(blockGroupName);
+                start_mode = config.Get<string>("start_mode", "flight");
+                rememberLastMode = config.Get<bool>("remember_mode", true);
 
-                start_mode = configIni.Get("main", "start_mode").ToString(start_mode);
-                rememberLastMode = configIni.Get("main", "remember_mode").ToBoolean(rememberLastMode);
+                maxFlightPitch = config.Get<float>("max_pitch", 40.0f);
+                maxFlightRoll = config.Get<float>("max_roll", 40.0f);
 
-                maxFlightPitch = (float)configIni.Get("main", "max_pitch").ToDouble(maxFlightPitch);
-                maxFlightRoll = (float)configIni.Get("main", "max_roll").ToDouble(maxFlightRoll);
+                maxLandingPitch = config.Get<float>("max_landing_pitch", 15.0f);
+                maxLandingRoll = config.Get<float>("max_landing_roll", 15.0f);
 
-                maxLandingPitch = (float)configIni.Get("main", "max_landing_pitch").ToDouble(maxLandingPitch);
-                maxLandingRoll = (float)configIni.Get("main", "max_landing_roll").ToDouble(maxLandingRoll);
+                precisionAimFactor = config.Get<float>("precision", 16.0f);
+                mouseSpeed = config.Get<float>("mouse_speed", 0.5f);
 
-                precisionAimFactor = (float)configIni.Get("main", "precision").ToDouble(precisionAimFactor);
+                if (Me.CustomData == "") Me.CustomData = configCache = config.write();
+                else configCache = Me.CustomData;
             }
 
             var blockGroup = GridTerminalSystem.GetBlockGroupWithName(blockGroupName);
@@ -231,9 +231,11 @@ namespace IngameScript
             controllerCache.Clear();
             blockGroup.GetBlocksOfType<IMyShipController>(controllerCache);
             if (!controllerCache.Any()) throw new Exception("Ship must have at least one ship controller");
+            controller = null;
             foreach (var controller in controllerCache)
             {
-                if (controller.IsMainCockpit) this.controller = controller;
+                if (controller.IsUnderControl || (controller.IsMainCockpit && this.controller == null))
+                    this.controller = controller;
             }
             if (this.controller == null) this.controller = controllerCache.First();
 

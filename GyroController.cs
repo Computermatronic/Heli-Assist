@@ -86,10 +86,11 @@ namespace IngameScript
 
             public Vector3 CalculateVelocityToAlign(float offsetPitch = 0.0f, float offsetRoll = 0.0f)
             {
-                var gravity = -Vector3D.Normalize(controller.GetNaturalGravity());
+                var gravity = -Vector3.Normalize(Vector3.TransformNormal(controller.GetNaturalGravity(), Matrix.Transpose(controller.WorldMatrix)));
+                var target = Vector3.Normalize(Vector3.Transform(gravity, Matrix.CreateFromAxisAngle(Vector3.Right, offsetPitch) * Matrix.CreateFromAxisAngle(Vector3.Forward, offsetRoll)));
 
-                var pitch = Vector3.Dot(controller.WorldMatrix.Forward, gravity) - offsetPitch;
-                var roll = Vector3.Dot(controller.WorldMatrix.Right, gravity) + offsetRoll;
+                var pitch = Vector3.Dot(Vector3.Forward, target);
+                var roll = Vector3.Dot(Vector3.Right, target);
 
                 return new Vector3(pitch, 0, roll);
             }
