@@ -120,7 +120,7 @@ namespace IngameScript
             public float CalculateThrustToHover()
             {
                 var gravityDir = controller.GetNaturalGravity();
-                var weight = controller.CalculateShipMass().TotalMass * gravityDir.Length();
+                var weight = controller.CalculateShipMass().PhysicalMass * gravityDir.Length();
                 var velocity = controller.GetShipVelocities().LinearVelocity;
 
                 gravityDir.Normalize();
