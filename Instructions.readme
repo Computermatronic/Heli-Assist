@@ -111,6 +111,8 @@ Usage:
          * mouse_speed - This sets the mouse sensitivity in all modes. By default, it is 10.
 
 Change Log:
+   v1.15:
+      * Fixed a bug where craft would gradually drift up due to incorrect craft mass being used.
    v1.14:
       * Fixed a bug where high pitch and roll config settings would cause craft to pitch and roll indefinitely.
       * Fixed a bug where script config is not auto-generated when left blank.

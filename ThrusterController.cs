@@ -127,7 +127,6 @@ namespace IngameScript
                 var gravityMatrix = Matrix.Invert(Matrix.CreateFromDir(gravityDir));
                 velocity = Vector3D.Transform(velocity, gravityMatrix);
 
-
                 if (Vector3.Transform(controller.WorldMatrix.GetOrientation().Down, gravityMatrix).Z < 0)
                     return (float)(weight + weight * -velocity.Z);
                 else
